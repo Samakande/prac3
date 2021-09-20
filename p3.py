@@ -61,7 +61,6 @@ def display_scores(count, raw_data):
     print("There are {} scores. Here are the top 3!".format(count))
     # print out the scores in the required format
     i = 0
-    print(raw_data)
     while count > i and i < 3 :
         print("{} - {}{}{} took {} guesses".format(i+1,chr(raw_data[i][0]),chr(raw_data[i][1]),chr(raw_data[i][2]),raw_data[i][3]))
         i = i+1
@@ -116,8 +115,14 @@ def save_scores():
     score_count,scores = fetch_scores()
     # include new score
     new_score=[]
+    i =0
     for letter in name:
-        new_score.append(ord(letter))
+        if i <3:
+         new_score.append(ord(letter))
+         i=i+1
+    while i<3:
+     new_score.append(ord(" "))
+     i=i+1
     new_score.append(num)
     scores.append(new_score)
     # sort
@@ -158,7 +163,6 @@ def btn_guess_pressed(btn_submit):
 #    GPIO.clean()
 #    menu()
     global value
-    print(value)
     # If they've pressed and held the button, clear up the GPIO and take them back to the menu screen
     # Compare the actual value with the user value displayed on the LEDs
     if state_dec == value:
