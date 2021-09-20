@@ -92,7 +92,6 @@ def setup():
     pwm_led=GPIO.PWM(LED_accuracy,1)
     pwm_buzzer=GPIO.PWM(buzzer,1)
     pwm_led.start(0)
-    pwm_buzzer.start(50)
     # Setup debouncing and callbacks
     GPIO.add_event_detect(btn_increase, GPIO.FALLING, callback=btn_increase_pressed,bouncetime=200)
     GPIO.add_event_detect(btn_submit, GPIO.FALLING, callback=btn_guess_pressed, bouncetime=200)
@@ -120,7 +119,6 @@ def save_scores():
     for letter in name:
         new_score.append(ord(letter))
     new_score.append(num)
-    print(new_score) 
     scores.append(new_score)
     # sort
     sorted_scores=sorted(scores, key=lambda x: x[3], reverse = False)
@@ -155,8 +153,8 @@ def btn_guess_pressed(btn_submit):
     state_dec= int(state,2)
     global num
     num = num +1
-#    accuracy_leds()
-#    trigger_buzzer()
+    accuracy_leds()
+    trigger_buzzer()
 #    GPIO.clean()
 #    menu()
     global value
@@ -195,30 +193,42 @@ def accuracy_leds():
         duty=((8-state_dec)/(8-value))*100
     else:
         duty = 0
-   # pwm_led=GPIO.PWM(LED_accuracy,1)
     pwm_led.ChangeDutyCycle(duty)
     pass
 
 # Sound Buzzer
 def trigger_buzzer():
+    state =str( GPIO.input(11))+str(GPIO.input(13))+str(GPIO.input(15))
+    state_dec= int(state,2)
     # The buzzer operates differently from the LED
     # While we want the brightness of the LED to change(duty cycle), we want the frequency of the buzzer to change
     # They buzzer duty cycle should be left at 50%
     # If the user is off by an absolute value of 3, the buzzer should sound once every second
     # If the user is off by an absolute value of 2, the buzzer should sound twice every second
     # If the user is off by an absolute value of 1, the buzzer should sound 4 times a second
+      
+    if abs(value-state_dec) == 3:
+        pwm_buzzer.ChangeFrequency(0.5)
+        pwm_buzzer.start(50) 
+    elif abs(value-state_dec) == 2:
+        pwm_buzzer.ChangeFrequency(2)
+        pwm_buzzer.start(50)
+    elif abs(value-state_dec) == 1:
+        pwm_buzzer.ChangeFrequency(4)
+        pwm_buzzer.start(50)
+    else:
+     pwm_buzzer.stop()
     pass
 
 
 if __name__ == "__main__":
     try:
         # Call setup function
-        setup()
-        welcome()
-        eeprom.populate_mock_scores()
-        while True:
-            menu()
-            pass
+         setup()
+         welcome()
+         while True:
+             menu()
+             pass
     except Exception as e:
         print(e)
     finally:
