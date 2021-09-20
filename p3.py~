@@ -27,12 +27,12 @@ def welcome():
     print("|_| \_|\__,_|_| |_| |_|_.__/ \___|_|    |_____/|_| |_|\__,_|_| |_| |_|\___|")
     print("")
     print("Guess the number and immortalise your name in the High Score Hall of Fame!")
-    print(fetch_scores())
 # Print the game menu
 def menu():
     global end_of_game
     global value
     global num
+    global state_dec
     option = input("Select an option:   H - View High Scores     P - Play Game       Q - Quit\n")
     option = option.upper()
     if option == "H":
@@ -47,6 +47,7 @@ def menu():
         print("Press and hold the guess button to cancel your game")
         value = generate_number()
         num=0
+        state_dec = 0
         while not end_of_game:
             pass
     elif option == "Q":
@@ -141,36 +142,34 @@ def generate_number():
 # Increase button pressed
 def btn_increase_pressed(btn_increase):
     # Increase the value shown on the LEDs
+    global state_dec
     state =str( GPIO.input(11))+str(GPIO.input(13))+str(GPIO.input(15))
-    new_state2= int(state,2)+1
-    new_state=str( bin(new_state2).replace("0b", "000"))[-3:]
+    new_state= int(state,2)+1
+    new_state=str( bin(new_state).replace("0b", "000"))[-3:]
     print(new_state)
     for i in range(3):
         GPIO.output(LED_value[i],int(new_state[i]))  
-    # You can choose to have a global variable store the user's current guess, 
+    # You can choose to have a global variable store the user's current guess,
+    state_dec =int(new_state,2) 
     # or just pull the value off the LEDs when a user makes a guess
     pass
 
 
 # Guess button
 def btn_guess_pressed(btn_submit):
-    state =str( GPIO.input(11))+str(GPIO.input(13))+str(GPIO.input(15))
-    state_dec= int(state,2)
     global num
     num = num +1
     accuracy_leds()
     trigger_buzzer()
 #    GPIO.clean()
 #    menu()
-    global value
-    print(value)
     # If they've pressed and held the button, clear up the GPIO and take them back to the menu screen
     # Compare the actual value with the user value displayed on the LEDs
     if state_dec == value:
         # Change the PWM LED
         # if it's close enough, adjust the buzzer
         # if it's an exact guess:
-        # - Disable LEDs and Buzzer   
+        # - Disable LEDs and Buzzer
         # - tell the user and prompt them for a name
         global name
         name = input("Enter your name: ")
@@ -179,15 +178,13 @@ def btn_guess_pressed(btn_submit):
         # - sort the scores
         # - Store the scores back to the EEPROM, being sure to update the score count
         save_scores()
+        welcome()
         menu()
     pass
 
 # LED Brightness
 def accuracy_leds():
 
-    state =str( GPIO.input(11))+str(GPIO.input(13))+str(GPIO.input(15))
-    state_dec= int(state,2)
-    global value
     # Set the brightness of the LED based on how close the guess is to the answer
     # - The % brightness should be directly proportional to the % "closeness"
     # - For example if the answer is 6 and a user guesses 4, the brightness should be at 4/6*100 = 66%
@@ -203,8 +200,6 @@ def accuracy_leds():
 
 # Sound Buzzer
 def trigger_buzzer():
-    state =str( GPIO.input(11))+str(GPIO.input(13))+str(GPIO.input(15))
-    state_dec= int(state,2)
     # The buzzer operates differently from the LED
     # While we want the brightness of the LED to change(duty cycle), we want the frequency of the buzzer to change
     # They buzzer duty cycle should be left at 50%
